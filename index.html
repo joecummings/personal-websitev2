@@ -12,6 +12,17 @@
 	ga('create', 'UA-62503680-2', 'auto');
 	ga('send', 'pageview');
 
+	/**
+	* Function that tracks a click on an outbound link in Analytics.
+	*/
+	var trackOutboundLink = function(url) {
+		ga('send', 'event', 'outbound', 'click', url, {
+			'transport': 'beacon',
+			// document.location
+			'hitCallback': function(){window.open(url);}
+		});
+	}
+
 	</script>
 	<!-- End Google Tag Manager -->
 
@@ -42,11 +53,11 @@
 		</div>
 		<section class="content">
 			<nav class="menu menu--tsula">
-				<a class="menu__item" href="https://github.com/joecummings/" onclick="trackOutboundLink('https://github.com/joecummings/'); return false;" target="_blank">
+				<a class="menu__item" href="https://github.com/joecummings/" onclick="trackOutboundLink('https://github.com/joecummings/'); return false;">
 					<span class="menu__item-name">Github</span>
 					<span class="menu__item-label">Explore my projects.</span>
 				</a>
-				<a class="menu__item" href="https://www.linkedin.com/in/joe-cummings-8bba1ab7/" onclick="trackOutboundLink('https://www.linkedin.com/in/joe-cummings-8bba1ab7/'); return false;" target="_blank">
+				<a class="menu__item" href="https://www.linkedin.com/in/joe-cummings-8bba1ab7/" onclick="trackOutboundLink('https://www.linkedin.com/in/joe-cummings-8bba1ab7/'); return false;">
 					<span class="menu__item-name">LinkedIn</span>
 					<span class="menu__item-label">See what I've been up to.</span>
 				</a>
@@ -57,18 +68,6 @@
 			</nav>
 		</section>
 	</main>
-
-	<script>
-	/**
-	* Function that tracks a click on an outbound link in Analytics.
-	*/
-	var trackOutboundLink = function(url) {
-		ga('send', 'event', 'outbound', 'click', url, {
-			'transport': 'beacon',
-			'hitCallback': function(){document.location = url;}
-		});
-	}
-	</script>
 
 	<script src="js/charming.min.js"></script>
 	<script src="js/anime.min.js"></script>
