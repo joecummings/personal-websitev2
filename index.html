@@ -15,21 +15,17 @@
 	</script>
 	<!-- End Google Tag Manager -->
 
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Joe Cummings | Personal Website</title>
-	<meta name="description" content="You have reached the personal website of Joe Cummings. Check here for projects, contact information and other content." />
-	<meta name="keywords" content="Joe, Cummings, Northwestern, GitHub, LinkedIN, Resume, Website, DeveloperTown" />
-	<meta name="author" content="Joe Cummings" />
-	<link rel="shortcut icon" href="favicon.ico">
-	<meta property="og:url" content="http://www.joecummings.io" />
-	<meta name="google-site-verification" content="ZW6rlwfQ0KZP61uuHo6K-4Bq7PBy20R4vzOkVIZsd00" />
-
-	<link href="https://fonts.googleapis.com/css?family=Roboto:400,700|Space+Mono" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="css/normalize.css" />
-	<link rel="stylesheet" type="text/css" href="css/demo.css" />
-	<link rel="stylesheet" type="text/css" href="css/style-tsula.css" />
-	<script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this demo in a modern browser that supports CSS Variables.");</script>
+	<script>
+	/**
+	* Function that tracks a click on an outbound link in Analytics.
+	*/
+	var trackOutboundLink = function(url) {
+		ga('send', 'event', 'outbound', 'click', url, {
+			'transport': 'beacon',
+			'hitCallback': function(){document.location = url;}
+		});
+	}
+	</script>
 
 </head>
 
@@ -42,11 +38,11 @@
 		</div>
 		<section class="content">
 			<nav class="menu menu--tsula">
-				<a class="menu__item" href="https://github.com/joecummings/" target="_blank">
+				<a class="menu__item" href="https://github.com/joecummings/" onclick="trackOutboundLink('https://github.com/joecummings/'); return false;" target="_blank">
 					<span class="menu__item-name">Github</span>
 					<span class="menu__item-label">Explore my projects.</span>
 				</a>
-				<a class="menu__item" href="https://www.linkedin.com/in/joe-cummings-8bba1ab7/" target="_blank">
+				<a class="menu__item" href="https://www.linkedin.com/in/joe-cummings-8bba1ab7/" onclick="trackOutboundLink('https://www.linkedin.com/in/joe-cummings-8bba1ab7/'); return false;" target="_blank">
 					<span class="menu__item-name">LinkedIn</span>
 					<span class="menu__item-label">See what I've been up to.</span>
 				</a>
