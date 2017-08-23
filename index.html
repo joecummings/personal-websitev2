@@ -19,7 +19,13 @@
 		ga('send', 'event', 'outbound', 'click', url, {
 			'transport': 'beacon',
 			// document.location
-			'hitCallback': function(){window.open(url);}
+			'hitCallback': function() {
+				if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
+					window.open(url);
+				} else {
+					document.location = url;
+				}
+			}
 		});
 	}
 
