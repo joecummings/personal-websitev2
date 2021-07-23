@@ -6,27 +6,36 @@ Joe Cummings
  
 ***
 
-### **Why?** 
-BERT is built upon a machine learning architecture called a Transformer and Transformers are sick and tight. Also, everyone from those just flirting with NLP to those on the cutting edge will almost assuradely have to use a Transformer-based model at some point in their lives.
+* [Motivation](#motivation)
+* [Background](#background)
+* [Fine-tuning BERT](#fine-tune)
+  * [Setup](#setup)
+  * [Preprocessing](#preprocessing)
+  * [Training & Evaluation](#training-eval)
 
-### **Okay, Transformers are awesome, but why should I care about BERT?** 
+***
 
-I'm getting to that. For now, just know that BERT and its derivitives make up a large amount of the Transformer-based models out there, namely because BERT's results are so impressive. 
+### **Motivation** {#motivation}
+BERT is built upon a machine learning architecture called a Transformer and Transformers are sick and tight. Also, everyone from those just flirting with NLP to those on the cutting edge will have to use a Transformer-based model at some point in their lives.
 
 > I'd highly recommend reading through this entire post as it adds color to the model you'll be building, but if you just want the TL;DR, you can skip to the [tutorial part](#fine-tune) now.
 
-### **Background**
-The Transformer architecutre was introduced in the paper ["Attention Is All You Need"](https://arxiv.org/abs/1706.03762) in 2018. To give some insight into the impact of this paper, it has been cited over 24k times in just 3 years. I won't cover all the details of the Transformer architecture in this post, but there are some amazing resources made by some very smart people to understanding it [here](https://nlp.seas.harvard.edu/2018/04/03/attention.html) and [here](https://jalammar.github.io/illustrated-transformer/). At a high level, the Transformer architecture has proven to be both superior in quality and faster to train by virtue of relying solely on [attention mechanisms](https://en.wikipedia.org/wiki/Attention_(machine_learning)) - doing away with cumbersome convolution and recurrence. I'd highly recommend reading more about it before going further with BERT. (And as an extra challenge, please [email me](mailto:) if you have an intuitive way to explain positional encoding because it still trips me up sometimes.)
+### **Background** {#background}
+The Transformer architecture was introduced in the paper ["Attention Is All You Need"](https://arxiv.org/abs/1706.03762) in 2017 and has since been cited over 24k times. The Transformer has proven to be both superior in quality and faster to train by virtue of relying solely on [attention mechanisms](https://en.wikipedia.org/wiki/Attention_(machine_learning)) - doing away with cumbersome convolution and recurrence. I'd highly recommend reading more about it before going further with BERT - see these amazing resources [here](https://nlp.seas.harvard.edu/2018/04/03/attention.html) and [here](https://jalammar.github.io/illustrated-transformer/).
+
+> Extra challenge: please [email me](mailto:) if you have an intuitive way to explain **positional encoding** because it still trips me up sometimes.
 
 Researchers jumped at the chance to build upon the Transformer architecture and soon the world had The Allen Institute's [ELMo](https://allennlp.org/elmo) and OpenAI's [GPT/GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf). For this tutorial, we'll look at Google's [BERT](https://arxiv.org/abs/1810.04805), which was introduced in 2019. 
 
-So what sets BERT apart? The answer lies in the name: **B**idirectional **E**ncoder **R**epresentations from **T**ransformers. Previous models, like GPT, encoded sequences using a left-to-right architecture, meaning that every token can only "see" the tokens that came before it. This is sub-optimal for tasks like question answering where it is extremely helpful to integrate context from the entire sequence. BERT's architecture enables these deep bidirectional representations. 
+So, what sets BERT apart? The answer lies in the name: **B**idirectional **E**ncoder **R**epresentations from **T**ransformers. Previous models, like GPT, encoded sequences using a left-to-right architecture, meaning that every token can only "see" the tokens that came before it. This is sub-optimal for tasks like question answering where it is extremely helpful to integrate context from the entire sequence. BERT's architecture enables deep bidirectional representations. 
 
 ![*Comparison of self-attention - what BERT uses - and masked attention - what GPT uses ([source](https://jalammar.github.io/illustrated-gpt2/))*](https://jc-tutorials.s3.us-east-2.amazonaws.com/fine-tune-bert/self-attention-and-masked-self-attention.png)
 
-You may be thinking at this point "Those idiots! Why did they only train left-to-right and mask their attention mechanism?". I can assure you the researchers at OpenAI are far from idiots. Strictly bidirectional conditioning would allow each token in a sequence to essentially "see itself" and the output would be trivially predicted. It's kinda like asking a friend to repeat a sentence after you and calling it "learning."
+You may be thinking at this point: "Okay, why mask the attention mechanism? Why not just integrate the context from the entire sequence from the start?". The answer is that strictly bidirectional conditioning would allow each token in a sequence to essentially "see itself" and the output would be trivially predicted. Imagine I gave you the following sentence: "The dog went to the park" and asked you to "predict" what word came after "dog". Since you have the entire sentence as context, you *know* that "went" immediately succeeds "dog". While this is a slight oversimplification, it should convey the general idea. The diagram below also helps visualize the difference between these langauge modeling methods.
 
-Okay, so if bidirectional encoding is impossible, how is BERT doing it? An excellent question and now we're really getting into how BERT was trained. BERT introduces something called a **"masked language model"**, but you might also see this generally referrred to as a [cloze]() task. In pre-training, 15% of all tokens are replaced with a special `[MASK]` token or a random token. 
+![*Encoding styles of BERT, GPT, and ELMo. ELMo does a shallow concatenation of a left-to-right encoding and a right-to-left encoding.([source](https://arxiv.org/abs/1810.04805))*](https://jc-tutorials.s3.us-east-2.amazonaws.com/fine-tune-bert/model-comparisons.png)
+
+So, if bidirectional encoding is impossible, how is BERT doing it? BERT introduces something called a **"masked language model"** (MLM), but you might also see this referrred to as a [cloze](https://aclanthology.org/W10-1007.pdf) task. In pre-training, 15% of all tokens are replaced with a special `[MASK]` token or a random token. 
 
 ```
 The dog went to the park. -> The dog [MASK] to the park.
@@ -34,9 +43,7 @@ The dog went to the park. -> The dog [MASK] to the park.
 ```
 *Example of how the sequence "The dog went to the park" would be masked in pre-training of BERT.*
 
-The model then is tasked with predicting the correct missing token. So rather than processing the left context of a sequence and trying predict the next token, BERT had to learn how to predict at random spots in the sentence. 
-
-> I was a little disappointed in the paper and in the many, many people who have since created posts about BERT because none of them I feel adequitely explains *why* the MLM is the missing ingredient to making bidirectional encoding work.
+The model then is tasked with predicting the correct missing token. So rather than processing the left context of a sequence and trying predict the next token, BERT has to learn how to predict at random spots in the sentence. 
 
 While MLM models the relationship between tokens in a sequence, BERT is also trained on with something called **"next sentence prediction"**, which models the relationships between sentences. This is very useful for question answering, summarization, and multiple-choice tasks. The data is encoded as shown below. 
 
@@ -237,3 +244,5 @@ Training on 1,000 examples, you should see a `micro f1` score of X%.
 If you have any comments, questions, or corrections, feel free to drop me a line.
 
 #### Thanks to:
+
+[Dan Knight](https://www.linkedin.com/in/dan-c-knight/) for his feedback and encouragement.
