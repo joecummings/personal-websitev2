@@ -253,7 +253,8 @@ In this tutorial, we learned about the incredible Transformer model called BERT 
 
 > Bonus question answer: the [`pickle`](https://docs.python.org/3/library/pickle.html) module, which is the default serializer in Python, does not serialize or deserialize code, e.g. lambda functions. It only serializes the names of classes/methods/functions. Therefore, if you want to save your model to use again, you cannot use an anonymous function.
 
-If you have any comments, questions, or corrections, feel free to [drop me a line](mailto:jrcummings27@gmail.com).
+You can find all the code for this tutorial on my [Github](https://github.com/joecummings/fine-tune-bert
+). If you have any comments, questions, or corrections, feel free to [drop me a line](mailto:jrcummings27@gmail.com).
 
 #### Thanks to:
 
