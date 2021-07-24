@@ -224,6 +224,7 @@
 <li><a href="#preprocessing">Preprocessing</a></li>
 <li><a href="#training-eval">Training &amp; Evaluation</a></li>
 </ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
 </ul>
 <hr />
 <h3 id="motivation"><strong>Motivation</strong></h3>
@@ -234,7 +235,12 @@
 <h3 id="background"><strong>Background</strong></h3>
 <p>The Transformer architecture was introduced in the paper <a href="https://arxiv.org/abs/1706.03762">“Attention Is All You Need”</a> in 2017 and has since been cited over 24k times. The Transformer has proven to be both superior in quality and faster to train by virtue of relying solely on <a href="https://en.wikipedia.org/wiki/Attention_(machine_learning)">attention mechanisms</a> - doing away with cumbersome convolution and recurrence. I’d highly recommend reading more about it before going further with BERT - see these amazing resources <a href="https://nlp.seas.harvard.edu/2018/04/03/attention.html">here</a> and <a href="https://jalammar.github.io/illustrated-transformer/">here</a>.</p>
 <blockquote>
-<p>Extra challenge: please <a href="mailto:">email me</a> if you have an intuitive way to explain <strong>positional encoding</strong> because it still trips me up sometimes.</p>
+<p>Extra challenge: please <script type="text/javascript">
+<!--
+h='&#x67;&#x6d;&#x61;&#x69;&#108;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#106;&#114;&#x63;&#x75;&#x6d;&#x6d;&#x69;&#110;&#x67;&#x73;&#50;&#x37;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'" clas'+'s="em' + 'ail">'+'&#x65;&#x6d;&#x61;&#x69;&#108;&#32;&#x6d;&#x65;'+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#x65;&#x6d;&#x61;&#x69;&#108;&#32;&#x6d;&#x65;&#32;&#40;&#106;&#114;&#x63;&#x75;&#x6d;&#x6d;&#x69;&#110;&#x67;&#x73;&#50;&#x37;&#32;&#x61;&#116;&#32;&#x67;&#x6d;&#x61;&#x69;&#108;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;&#x29;</noscript> if you have an intuitive way to explain <strong>positional encoding</strong> because it still trips me up sometimes.</p>
 </blockquote>
 <p>Researchers jumped at the chance to build upon the Transformer architecture and soon the world had The Allen Institute’s <a href="https://allennlp.org/elmo">ELMo</a> and OpenAI’s <a href="https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf">GPT/GPT-2</a>. For this tutorial, we’ll look at Google’s <a href="https://arxiv.org/abs/1810.04805">BERT</a>, which was introduced in 2019.</p>
 <p>So, what sets BERT apart? The answer lies in the name: <strong>B</strong>idirectional <strong>E</strong>ncoder <strong>R</strong>epresentations from <strong>T</strong>ransformers. Previous models, like GPT, encoded sequences using a left-to-right architecture, meaning that every token can only “see” the tokens that came before it. This is sub-optimal for tasks like question answering where it is extremely helpful to integrate context from the entire sequence. BERT’s architecture enables deep bidirectional representations.</p>
@@ -312,8 +318,14 @@ Classification: NotNext</code></pre>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>At this point, you might be thinking what the hell am I looking at? Well I’ve spared your eyes by truncating the number of zeros shown in the output, but the length of each item in the returned dictionary is 512, which is the maximum length that BERT can accept. To some, this might be confusing - why do we need every input sequence to be the same size? The answer is efficiency. Linear combinations are much faster than normal multiplication and for those to be possible, all vectors need to be of the same length.</p>
 <ul>
-<li><code>input_ids</code> correspond to a given token in the vocabulary. So the mapping looks like the following:</li>
+<li><code>input_ids</code> correspond to a given token in the vocabulary. BERT also contains a set of tokens to denote special meanings.
+<ul>
+<li><code>[CLS]</code>: Short for classification. Goes at the beginning of every sequence.</li>
+<li><code>[SEP]</code>: Short for separation. Goes in between sentences if given a sentence pair, and at the end of the sequence.</li>
+<li><code>[UNK]</code>: Short for unknown. Replaces any tokens that cannot be found in the vocabulary.</li>
+</ul></li>
 </ul>
+<p>So the mapping from above looks like the following:</p>
 <table>
 <thead>
 <tr class="header">
@@ -360,20 +372,20 @@ Classification: NotNext</code></pre>
 <li><code>token_type_ids</code> are used in any tasks that contain two sequences, like question answering, summarization, etc. Because we are doing a sequence classification task with only one sentence, all our <code>token_type_ids</code> will be <code>0</code>.</li>
 <li><code>attention_mask</code> refers to which tokens the model should “attend”. For the most basic case, we want the model to be able to “see” all of our tokens, which are marked with a <code>1</code>.</li>
 </ul>
-<p>Keep in mind while debugging, that you may see more <code>input_ids</code> than tokens you input. That’s because BERT tokenizes using <a href="">WordPiece</a> which can split some words into two or three different tokens.</p>
+<p>Keep in mind while debugging, that you may see more <code>input_ids</code> than original tokens. That’s because BERT tokenizes using <a href="https://arxiv.org/abs/1609.08144v2">WordPiece</a> which can split some words into two or three different tokens.</p>
 <p>So, how can we apply this tokenize function across all text labels? One way would simply be to iterate programmatically over every entry in the dataset and convert the text like so:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> example <span class="kw">in</span> emo_dataset[<span class="st">&quot;train&quot;</span>]:</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    tokenized_text <span class="op">=</span> tokenizer(example[<span class="st">&quot;text&quot;</span>])</span></code></pre></div>
-<p>Obviously, this is a very slow process and we do have a better option. HuggingFace provides us with a useful <a href="https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map"><code>map</code></a> function on the <code>Dataset</code> object.</p>
+<p>This is a slow process and we do have a better option. HuggingFace provides us with a useful <a href="https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map"><code>map</code></a> function on the <code>Dataset</code> object.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tokenize_go_emotion(example):</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tokenizer(example[<span class="st">&quot;text&quot;</span>], padding<span class="op">=</span><span class="st">&quot;max_length&quot;</span>, truncation<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>tokenized_data <span class="op">=</span> dataset.<span class="bu">map</span>(tokenize_go_emotion, batched<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
-<p>In running some experiments, we can see just how much faster <code>Dataset.map</code> can be.</p>
+<p>In my experience, <code>Dataset.map</code> runs ~200ms faster than linear iteration and automatically caches the result so that each subsequent call takes a fraction of the time to complete.</p>
 <blockquote>
-<p>Bonus question: what’s a reason we might not want to just define our function as <code>lambda x: tokenizer(x["text"])</code> and save a couple lines of code? (See answer at the end of the tutorial).</p>
+<p>Bonus question: why wouldn’t we want to just define our function as <code>lambda x: tokenizer(x["text"])</code> and save a couple lines of code? (See answer at the end of the tutorial).</p>
 </blockquote>
-<p>As mentioned, <code>emotions</code> is a rather large dataset and I don’t know about you, but I’m trying not to beat the shit out of my already overworked computer. So let’s shuffle the data and grab a subset of the examples.</p>
+<p>As mentioned, <code>emotion</code> is a rather large dataset and I don’t know about you, but I’m trying not to beat the shit out of my already overworked computer. So let’s shuffle the data and grab a subset of the examples.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>small_train_dataset <span class="op">=</span> tokenized_data[<span class="st">&quot;train&quot;</span>].shuffle(seed<span class="op">=</span><span class="dv">42</span>).select(<span class="bu">range</span>(<span class="dv">1000</span>))</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>small_val_dataset <span class="op">=</span> tokenized_data[<span class="st">&quot;validation&quot;</span>].shuffle(seed<span class="op">=</span><span class="dv">42</span>).select(<span class="bu">range</span>(<span class="dv">100</span>))</span></code></pre></div>
 <p>Now for the fun part - let’s build this model! First, we load BERT from a pretrained HuggingFace location and specify how many labels BERT will have.</p>
@@ -381,13 +393,13 @@ Classification: NotNext</code></pre>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;bert-base-uncased&quot;</span>, num_labels<span class="op">=</span><span class="dv">8</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <h4 id="training-eval"><strong>3. Training &amp; Evaluating</strong></h4>
-<p>Second, we load the training arguments for the model (this could also be known as the config). <code>TrainingArguments</code> has a ton of parameters so you can check those out <a href="https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments">here</a>.</p>
+<p>Second, we load the training arguments for the model (this could also be known as the config). <code>TrainingArguments</code> has a ton of parameters so you can check those out <a href="https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments">here</a>. For our purposes, we only need to specify the output directory, the evaluation strategy (when will we evaluate the results), and the number of epochs to run.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>training_args <span class="op">=</span> TrainingArguments(</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;bert_trainer&quot;</span>,</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    evaluation_strategy<span class="op">=</span><span class="st">&quot;epoch&quot;</span>,</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    num_train_epochs<span class="op">=</span><span class="dv">5</span>,</span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
-<p>Finally, we’re ready to train! We set up an abstract Trainer class and give it our model, arguments, the training dataset, and the validation dataset to evaluate on. Calling the <code>trainer.train()</code> method (not surprisingly) kicks of the model fine-tuning.</p>
+<p>Finally, we’re ready to train. We set up an abstract Trainer class and give it our model, arguments, the training dataset, and the validation dataset to evaluate on. Calling the <code>trainer.train()</code> method (not surprisingly) kicks of the model fine-tuning.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> Trainer(</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>training_args,</span>
@@ -395,8 +407,7 @@ Classification: NotNext</code></pre>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    eval_dataset<span class="op">=</span>small_val_dataset,</span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>trainer.train()</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>trainer.evaluate()</span></code></pre></div>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>trainer.train()</span></code></pre></div>
 <p>The first output will probably look something like…</p>
 <pre><code>Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: [&#39;cls.predictions.transform.LayerNorm.bias&#39;, &#39;cls.predictions.transform.dense.bias&#39;, &#39;cls.seq_relationship.weight&#39;, &#39;cls.predictions.decoder.weight&#39;, &#39;cls.seq_relationship.bias&#39;, &#39;cls.predictions.bias&#39;, &#39;cls.predictions.transform.dense.weight&#39;, &#39;cls.predictions.transform.LayerNorm.weight&#39;]
 - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
@@ -404,12 +415,22 @@ Classification: NotNext</code></pre>
 Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: [&#39;classifier.bias&#39;, &#39;classifier.weight&#39;]
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.</code></pre>
 <p>But don’t freak out! This is what we expect because we are randomly initializing the weights of the last head for our classification task.</p>
-<p>If you have access to a GPU, HuggingFace will automatically find the device and push most calculations to that. I was able to run the entire dataset on a single Nvidia 2080 RTX Ti GPU in around 90 minutes. I recognize that not all people have access to such compute power, so for comparison, on a <code>2.4 GHz 8-Core Intel Core i9</code> processor, I was able to train on 1,000 examples in ~60 minutes.</p>
-<p>Training on 1,000 examples, you should see a <code>micro f1</code> score of X%.</p>
+<p>If you have access to a GPU, HuggingFace will automatically find the device and push most calculations to that. I was able to run the entire dataset on a single Nvidia GeForce GTX 1080 GPU in 77 minutes with an evalutation <code>micro f1</code> score of <code>94%</code>.</p>
+<blockquote>
+<p>If you’re unfamiliar with the F1-scoring metric, you can read more about it <a href="https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/">here</a> and why it can be a better metric than accuracy.</p>
+</blockquote>
+<p>I recognize that not all people have access to such compute power, so for comparison, I ran the fine-tuning on an <code>Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz</code>. Unfortunately, the amount of time this would take is somewhat absurd, so I scaled back the size of our dataset. Training on 1000 examples, I fine-tuned BERT in 1020 minutes with an evaluation <code>micro f1</code> score of 86%.</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this tutorial, we learned about the incredible Transformer model called BERT and how to quickly and easily fine-tune it on a downstream task. With this knowledge, you can go forth and build many a NLP application.</p>
 <blockquote>
 <p>Bonus question answer: the <a href="https://docs.python.org/3/library/pickle.html"><code>pickle</code></a> module, which is the default serializer in Python, does not serialize or deserialize code, e.g. lambda functions. It only serializes the names of classes/methods/functions. Therefore, if you want to save your model to use again, you cannot use an anonymous function.</p>
 </blockquote>
-<p>If you have any comments, questions, or corrections, feel free to drop me a line.</p>
+<p>If you have any comments, questions, or corrections, feel free to <script type="text/javascript">
+<!--
+h='&#x67;&#x6d;&#x61;&#x69;&#108;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#106;&#114;&#x63;&#x75;&#x6d;&#x6d;&#x69;&#110;&#x67;&#x73;&#50;&#x37;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'" clas'+'s="em' + 'ail">'+'&#100;&#114;&#x6f;&#112;&#32;&#x6d;&#x65;&#32;&#x61;&#32;&#108;&#x69;&#110;&#x65;'+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#100;&#114;&#x6f;&#112;&#32;&#x6d;&#x65;&#32;&#x61;&#32;&#108;&#x69;&#110;&#x65;&#32;&#40;&#106;&#114;&#x63;&#x75;&#x6d;&#x6d;&#x69;&#110;&#x67;&#x73;&#50;&#x37;&#32;&#x61;&#116;&#32;&#x67;&#x6d;&#x61;&#x69;&#108;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;&#x29;</noscript>.</p>
 <h4 id="thanks-to">Thanks to:</h4>
 <p><a href="https://www.linkedin.com/in/dan-c-knight/">Dan Knight</a> for his feedback and encouragement.</p>
 </body>

@@ -12,6 +12,7 @@ Joe Cummings
   * [Setup](#setup)
   * [Preprocessing](#preprocessing)
   * [Training & Evaluation](#training-eval)
+* [Conclusion](#conclusion)
 
 ***
 
@@ -23,7 +24,7 @@ BERT is built upon a machine learning architecture called a Transformer and Tran
 ### **Background** {#background}
 The Transformer architecture was introduced in the paper ["Attention Is All You Need"](https://arxiv.org/abs/1706.03762) in 2017 and has since been cited over 24k times. The Transformer has proven to be both superior in quality and faster to train by virtue of relying solely on [attention mechanisms](https://en.wikipedia.org/wiki/Attention_(machine_learning)) - doing away with cumbersome convolution and recurrence. I'd highly recommend reading more about it before going further with BERT - see these amazing resources [here](https://nlp.seas.harvard.edu/2018/04/03/attention.html) and [here](https://jalammar.github.io/illustrated-transformer/).
 
-> Extra challenge: please [email me](mailto:) if you have an intuitive way to explain **positional encoding** because it still trips me up sometimes.
+> Extra challenge: please [email me](mailto:jrcummings27@gmail.com) if you have an intuitive way to explain **positional encoding** because it still trips me up sometimes.
 
 Researchers jumped at the chance to build upon the Transformer architecture and soon the world had The Allen Institute's [ELMo](https://allennlp.org/elmo) and OpenAI's [GPT/GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf). For this tutorial, we'll look at Google's [BERT](https://arxiv.org/abs/1810.04805), which was introduced in 2019. 
 
@@ -145,7 +146,12 @@ And let's see how this is encoded!
 
 At this point, you might be thinking what the hell am I looking at? Well I've spared your eyes by truncating the number of zeros shown in the output, but the length of each item in the returned dictionary is 512, which is the maximum length that BERT can accept. To some, this might be confusing - why do we need every input sequence to be the same size? The answer is efficiency. Linear combinations are much faster than normal multiplication and for those to be possible, all vectors need to be of the same length. 
 
-* `input_ids` correspond to a given token in the vocabulary. So the mapping looks like the following:
+* `input_ids` correspond to a given token in the vocabulary. BERT also contains a set of tokens to denote special meanings.
+  * `[CLS]`: Short for classification. Goes at the beginning of every sequence.
+  * `[SEP]`: Short for separation. Goes in between sentences if given a sentence pair, and at the end of the sequence.
+  * `[UNK]`: Short for unknown. Replaces any tokens that cannot be found in the vocabulary.
+
+So the mapping from above looks like the following:
 
 token input_id
 ----- ---------
@@ -162,14 +168,14 @@ park  2380
 * `token_type_ids` are used in any tasks that contain two sequences, like question answering, summarization, etc. Because we are doing a sequence classification task with only one sentence, all our `token_type_ids` will be `0`.
 * `attention_mask` refers to which tokens the model should "attend". For the most basic case, we want the model to be able to "see" all of our tokens, which are marked with a `1`. 
 
-Keep in mind while debugging, that you may see more `input_ids` than tokens you input. That's because BERT tokenizes using [WordPiece]() which can split some words into two or three different tokens.
+Keep in mind while debugging, that you may see more `input_ids` than original tokens. That's because BERT tokenizes using [WordPiece](https://arxiv.org/abs/1609.08144v2) which can split some words into two or three different tokens.
 
 So, how can we apply this tokenize function across all text labels? One way would simply be to iterate programmatically over every entry in the dataset and convert the text like so:
 ```{.python}
 for example in emo_dataset["train"]:
     tokenized_text = tokenizer(example["text"])
 ```
-Obviously, this is a very slow process and we do have a better option. HuggingFace provides us with a useful [`map`](https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map) function on the `Dataset` object. 
+This is a slow process and we do have a better option. HuggingFace provides us with a useful [`map`](https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map) function on the `Dataset` object. 
 
 ```{.python}
 def tokenize_go_emotion(example):
@@ -178,11 +184,11 @@ def tokenize_go_emotion(example):
 tokenized_data = dataset.map(tokenize_go_emotion, batched=True)
 ```
 
-In running some experiments, we can see just how much faster `Dataset.map` can be.
+In my experience, `Dataset.map` runs ~200ms faster than linear iteration and automatically caches the result so that each subsequent call takes a fraction of the time to complete.
 
-> Bonus question: what's a reason we might not want to just define our function as `lambda x: tokenizer(x["text"])` and save a couple lines of code? (See answer at the end of the tutorial).
+> Bonus question: why wouldn't we want to just define our function as `lambda x: tokenizer(x["text"])` and save a couple lines of code? (See answer at the end of the tutorial).
 
-As mentioned, `emotions` is a rather large dataset and I don't know about you, but I'm trying not to beat the shit out of my already overworked computer. So let's shuffle the data and grab a subset of the examples.
+As mentioned, `emotion` is a rather large dataset and I don't know about you, but I'm trying not to beat the shit out of my already overworked computer. So let's shuffle the data and grab a subset of the examples.
 
 ```{.python}
 small_train_dataset = tokenized_data["train"].shuffle(seed=42).select(range(1000))
@@ -199,7 +205,7 @@ model = BertForSequenceClassification.from_pretrained(
 
 #### **3. Training & Evaluating** {#training-eval}
 
-Second, we load the training arguments for the model (this could also be known as the config). `TrainingArguments` has a ton of parameters so you can check those out [here](https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments).
+Second, we load the training arguments for the model (this could also be known as the config). `TrainingArguments` has a ton of parameters so you can check those out [here](https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments). For our purposes, we only need to specify the output directory, the evaluation strategy (when will we evaluate the results), and the number of epochs to run.
 
 ```{.python}
 training_args = TrainingArguments(
@@ -209,7 +215,7 @@ training_args = TrainingArguments(
 )
 ```
 
-Finally, we're ready to train! We set up an abstract Trainer class and give it our model, arguments, the training dataset, and the validation dataset to evaluate on. Calling the `trainer.train()` method (not surprisingly) kicks of the model fine-tuning.
+Finally, we're ready to train. We set up an abstract Trainer class and give it our model, arguments, the training dataset, and the validation dataset to evaluate on. Calling the `trainer.train()` method (not surprisingly) kicks of the model fine-tuning.
 
 ```{.python}
 trainer = Trainer(
@@ -220,7 +226,6 @@ trainer = Trainer(
 )
 
 trainer.train()
-trainer.evaluate()
 ```
 
 The first output will probably look something like...
@@ -235,13 +240,18 @@ You should probably TRAIN this model on a down-stream task to be able to use it 
 
 But don't freak out! This is what we expect because we are randomly initializing the weights of the last head for our classification task.
 
-If you have access to a GPU, HuggingFace will automatically find the device and push most calculations to that. I was able to run the entire dataset on a single Nvidia 2080 RTX Ti GPU in around 90 minutes. I recognize that not all people have access to such compute power, so for comparison, on a `2.4 GHz 8-Core Intel Core i9` processor, I was able to train on 1,000 examples in ~60 minutes. 
+If you have access to a GPU, HuggingFace will automatically find the device and push most calculations to that. I was able to run the entire dataset on a single Nvidia GeForce GTX 1080 GPU in 77 minutes with an evalutation `micro f1` score of `94%`. 
 
-Training on 1,000 examples, you should see a `micro f1` score of X%.
+> If you're unfamiliar with the F1-scoring metric, you can read more about it [here](https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/) and why it can be a better metric than accuracy.
+
+I recognize that not all people have access to such compute power, so for comparison, I ran the fine-tuning on an `Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz`. Unfortunately, the amount of time this would take is somewhat absurd, so I scaled back the size of our dataset. Training on 1000 examples, I fine-tuned BERT in 1020 minutes with an evaluation `micro f1` score of 86%.
+
+### Conclusion {#conclusion}
+In this tutorial, we learned about the incredible Transformer model called BERT and how to quickly and easily fine-tune it on a downstream task. With this knowledge, you can go forth and build many a NLP application.
 
 > Bonus question answer: the [`pickle`](https://docs.python.org/3/library/pickle.html) module, which is the default serializer in Python, does not serialize or deserialize code, e.g. lambda functions. It only serializes the names of classes/methods/functions. Therefore, if you want to save your model to use again, you cannot use an anonymous function.
 
-If you have any comments, questions, or corrections, feel free to drop me a line.
+If you have any comments, questions, or corrections, feel free to [drop me a line](mailto:jrcummings27@gmail.com).
 
 #### Thanks to:
 
