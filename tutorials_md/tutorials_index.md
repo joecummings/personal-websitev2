@@ -4,4 +4,4 @@
 
 ***
 
-* [How to fine-tune BERT with HuggingFace](../tutorials/bert.html) - July, 2021
+* [How to fine-tune BERT using HuggingFace](../tutorials/bert.html) - July, 2021

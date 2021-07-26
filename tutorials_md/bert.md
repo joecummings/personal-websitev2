@@ -4,7 +4,7 @@
 
 Joe Cummings
 
-21 July, 2021 (Last Updated: 21 July, 2021)
+21 July, 2021 (Last Updated: 23 July, 2021)
  
 ***
 
@@ -19,7 +19,7 @@ Joe Cummings
 ***
 
 ### **Motivation** {#motivation}
-BERT is built upon a machine learning architecture called a Transformer and Transformers are sick and tight. Also, everyone from those just flirting with NLP to those on the cutting edge will have to use a Transformer-based model at some point in their lives.
+BERT is built upon a machine learning architecture called a Transformer and Transformers are fascinating. Everyone from those just flirting with NLP to those on the cutting edge will have to use a Transformer-based model at some point in their lives.
 
 > I'd highly recommend reading through this entire post as it adds color to the model you'll be building, but if you just want the TL;DR, you can skip to the [tutorial part](#fine-tune) now.
 
