@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>How to clean up a messy Git history – git_commit_cleanup</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #c4a000; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #000000; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #000000; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #000000; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<p>&lt; <a href="./tutorials_index.html">All tutorials</a></p>
+<h1 id="how-to-clean-up-a-messy-git-commit-history">How to clean up a messy Git commit history</h1>
+<p>Joe Cummings</p>
+<p>30 July, 2021 (Last Updated: 30 July, 2021)</p>
+<hr />
+<ul>
+<li><a href="#motivation">Motivation</a></li>
+<li><a href="#background">Background</a></li>
+<li><a href="#cleanup">Cleaning up Git commits</a>
+<ol type="1">
+<li><a href="#combining">Combining multiple smaller commits into one</a></li>
+<li><a href="#renaming">Renaming a commit</a></li>
+<li><a href="#multiple">Breaking one commit into multiple commits</a></li>
+<li><a href="#finish">Finishing up</a></li>
+</ol></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+<hr />
+<h3 id="motivation"><strong>Motivation</strong></h3>
+<p>If you’re like me, your Git commit history is not always the most helpful. There are poorly named commits, weird branch merges, commits that don’t belong together, etc.</p>
+<div style="width:100%;height:0;padding-bottom:56%;position:relative;">
+<iframe src="https://giphy.com/embed/QMHoU66sBXqqLqYvGO" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed" allowFullScreen>
+</iframe>
+</div>
+<p>
+<i>Me reviewing my commits after a long day of coding (via GIPHY)</i>
+</p>
+<p>Why does this matter? Well, let’s consider the case of a bug found during review. For whatever reason, a feature is not working as expected. If you have a clean, linear, Git history with well-named commits, finding the issue and rewinding/fixing that commit is fairly trivial.</p>
+<p>While I don’t claim to be an expert in Git, the steps I’ll go over in this post are the tricks I use to clean up my Git history.</p>
+<h3 id="background">Background</h3>
+<p>I will assume some familiarity with Git if you’re on this post; however, just for fun let’s go over a little bit of history.</p>
+<p>Why do we need version control?</p>
+<ol type="1">
+<li>Keeping track of changes. Code is complicated and developers edit and re-edit files constantly to get to a desired state. Version control systems track the changes efficiently.</li>
+<li>Enabling collaboration. Codebases can be huge and software is a team sport.</li>
+<li>Data backup.</li>
+</ol>
+<p>Version control systems have been around since the <a href="https://www.linkedin.com/learning/learning-software-version-control/the-history-of-version-control">early 1970s</a>. Git emerged in 2005 from Linus Torvalds and the Linux Foundation. They were used another version control system but the relationship with them soured and so they went about creating their own. Git is incredibly fast, simple, fully distributed, and can handle large projects like the Linux kernel.</p>
+<p>Here are some more resources on the subject:</p>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git">A short history of Git</a></li>
+<li><a href="https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control">Version control</a></li>
+</ul>
+<h3 id="cleanup">Cleaning up Git commits</h3>
+<p>For this, let’s assume we are working on a feature on a separate branch (because we would NEVER work on <code>master/main</code> branch) and we’ve gotten to the point where we want to submit a <a href="https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">Pull Request</a> and merge our changes into the <code>master/main</code> branch. I find it really useful to start by seeing where we are:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--graph</span></span></code></pre></div>
+<p>This pulls up all my commits (or as many as will fit in my screen) like the following:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 9b4b5040eef0504182dcdef7aea73334551cd3b9 (HEAD -&gt; feature-1)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:47:28 2021 -0400</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>|     Remove redundant test for feature-1</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit f5286491c8ce06db3eb0667fc300836267cb9c9a</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:46:38 2021 -0400</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>|     Fix typo in feature-1 tests</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit c4fb686736d462e0fc1e239b7da79610b76e197d</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>|     Add feature-1 tests</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 594a2c077a469427f0418fee9cdcfa427e048d0f</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:51:00 2021 -0400</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>|     buttz</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit ec09d3b36013b3140ac03de7f51e1019d23825a2</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:23:44 2021 -0400</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>|     Fix linting errors; add credentials</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit db02d3b56013b3140ac03de7f91e1019123825a2</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:23:44 2021 -0400</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>|     Add feature-1</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 4a9c9b12531c7786802241d558f700d40538cad7 (master)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  Date:   Fri Aug 6 10:40:52 2021 -0400</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>      First commit</span></code></pre></div>
+<p>The <code>--graph</code> option gives a nice condensed and intuitive view of what changes currently exist in the history. We can see that there are 6 commits on my new branch <code>feature-1</code> and <code>master</code> is set to the very first commit. Now there are few things that we might want to clean up in this history before we commit it to the annals of <code>master/main</code> forever.</p>
+<h4 id="combining">1. Combining multiple smaller commits into one</h4>
+<p>Let’s take a look at the latest three commits. We can see one is adding tests for our feature, one is a typo correction in that tests file, and one is deleting a test we’ve since deemed unnecessary. These don’t need to be three separate commits - we gain no information from that! So we want to combine these commits, which we can do using the <code>rebase</code> command.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase <span class="at">-i</span> HEAD~3</span></code></pre></div>
+<p>Let’s decode this command a little. The <code>-i</code> option means this is going to be “interactive”, which means Git will show us a helpful Vim editor to complete the rebase. The <code>HEAD~3</code> means we want to move the <code>HEAD</code> (or current place in the code) back 3 commits, because that’s the first commit we want to use to combine.</p>
+<p>This command should popup a Vim window that looks like the following:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pick c4fb686 Add feature-1 tests</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pick f528649 Fix typo in feature-1 tests</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>pick 9b4b504 Remove redundant test for feature-1</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a># Rebase 594a2c0..9b4b504 onto 594a2c0 (3 commands)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a># Commands:</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a># p, pick &lt;commit&gt; = use commit</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a># r, reword &lt;commit&gt; = use commit, but edit the commit message</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a># e, edit &lt;commit&gt; = use commit, but stop for amending</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a># s, squash &lt;commit&gt; = use commit, but meld into previous commit</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a># f, fixup &lt;commit&gt; = like &quot;squash&quot;, but discard this commit&#39;s log message</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a># x, exec &lt;command&gt; = run command (the rest of the line) using shell</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a># b, break = stop here (continue rebase later with &#39;git rebase --continue&#39;)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a># d, drop &lt;commit&gt; = remove commit</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a># l, label &lt;label&gt; = label current HEAD with a name</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a># t, reset &lt;label&gt; = reset HEAD to a label</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a># m, merge [-C &lt;commit&gt; | -c &lt;commit&gt;] &lt;label&gt; [# &lt;oneline&gt;]</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a># .       create a merge commit using the original merge commit&#39;s</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a># .       message (or the oneline, if no original merge commit was</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a># .       specified). Use -c &lt;commit&gt; to reword the commit message.</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a># These lines can be re-ordered; they are executed from top to bottom.</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a># If you remove a line here THAT COMMIT WILL BE LOST.</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a># However, if you remove everything, the rebase will be aborted.</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>#</span></code></pre></div>
+<p>Git provides this convenient dialog that contains all the things you may want to do with this collection of commits. Decomposing this a little more, the format at the top goes:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;GIT COMMAND&gt; &lt;COMMIT HASH&gt; &lt;COMMIT MESSAGE&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>pick c4fb686 Add feature-1 tests</span></code></pre></div>
+<p>The option we want is <code>s</code> or <code>squash</code>. (You could also use <code>f</code> fir <code>fixup</code>.) The caveat is that all these commits have to be consectutive. So if these commits were all over our history, we’d have to use our editor and a little Vim magic to move all these commits together. Typically, I keep the oldest one where it is and move the more recent commits back.</p>
+<blockquote>
+<p>Vim tips: <code>Shift + V</code> will let you select an entire line in Vim. Then, you can use <code>d</code> to cut it, move your cursor to where you want it, and <code>p</code> to paste it.</p>
+</blockquote>
+<p>Replace the default <code>pick</code> of the two more recent commits (<code>9b4b504</code> and <code>f528649</code>) with an <code>s</code>. Your window should now look like the following:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pick c4fb686 Add feature-1 tests</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>s f528649 Fix typo in feature-1 tests</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>s 9b4b504 Remove redundant test for feature-1</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a># Rebase 594a2c0..9b4b504 onto 594a2c0 (3 commands)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<p>Then save and quit with <code>:wq</code>. You should see a confirmation page like the following, which will ask you what you want your new commit message to be.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a># This is a combination of 3 commits.</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a># This is the 1st commit message:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>Add feature-1 tests</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a># This is the commit message #2:</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>Fix typo in feature-1 tests</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a># This is the commit message #3:</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>Remove redundant test for feature-1</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a># Please enter the commit message for your changes. Lines starting</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a># with &#39;#&#39; will be ignored, and an empty message aborts the commit.</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a># Date:      Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a># interactive rebase in progress; onto 594a2c0</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a># Last commands done (3 commands done):</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>#    squash f528649 Fix typo in feature-1 tests</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>#    squash 9b4b504 Remove redundant test for feature-1</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a># No commands remaining.</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a># You are currently rebasing branch &#39;master&#39; on &#39;594a2c0&#39;.</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>#</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a># Changes to be committed:</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>#       new file:   main_tests.py</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>#</span></code></pre></div>
+<p>Let’s just keep the name <code>Add feature-1 test</code> so go ahead and delete or comment out the other commit messages and then save and quit. You see a message like:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Successfully</span> rebased and updated refs/heads/master.</span></code></pre></div>
+<p>Now when we check the git log, we see all those commits are now just one!</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 9e9a25d3f86a303a1c1dd4ebf6851cf891b25b46 (HEAD -&gt; feature-1)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>|     Add feature-1 tests</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 594a2c077a469427f0418fee9cdcfa427e048d0f</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:51:00 2021 -0400</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>|     buttz</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<h4 id="renaming">2. Renaming a commit</h4>
+<p>It would appear that I was so tired/frustrated with my work that I named my commit <code>buttz</code>. Upon closer inspection of the commit, it’s actually solid code, but the name is utterly useless. Let’s whip out our trusty interactive rebase and fix this trangression.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase <span class="at">-i</span> HEAD~2</span></code></pre></div>
+<p>We only want to move the <code>HEAD</code> back 2 commits now, as that’s the start of the commit we want to fix. This time replace the <code>pick</code> next to the commit named “buttz” with an <code>r</code> for <code>reword</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>r 594a2c0 buttz</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>pick 9e9a25d Add feature-1 tests</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a># Rebase 4a9c9b1..9e9a25d onto 4a9c9b1 (2 commands)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<p>Upon saving and closing, this will bring up an editor that looks very similar to the one we just saw for rebasing. Instead of commenting out the old commit message or deleting it, just rename it to something more descriptive like “Add __pycache__ to the .gitignore”. Upon saving and quitting, we should again see a succesful message.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Successfully</span> rebased and updated refs/heads/master.</span></code></pre></div>
+<p>And the log now looks like the following. We’re getting there!</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 1e46146a23de69f48d4a9c4e734396f1fe2df0cc (HEAD -&gt; feature-1)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>|     Add feature-1 tests</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 500e768614139ec1acff8316e2f28af5035e3829</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:51:00 2021 -0400</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>|     Add __pycache__ to the .gitignore</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<h4 id="multiple">3. Breaking one commit into multiple commits</h4>
+<p>This is one of the more complicated procedures. In commit <code>ec09d3b36013b3140ac03de7f51e1019d23825a2</code> we’re actually doing two different things, which is <em>not</em> best practice - we need to break it up into two separate commits.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase <span class="at">-i</span> HEAD~3<span class="kw">`</span></span></code></pre></div>
+<p>When the window pops up, we want to use the <code>e</code> option for <code>edit</code>. This will stop you at the given commit to make edits.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Stopped</span> at ec09d3b...  Fix linting errors<span class="kw">;</span> <span class="ex">add</span> credentials</span></code></pre></div>
+<p>Now there’s a lot you can go here. Essentially you’re back at the commit and can make whatever edits you want to! However, we want to split this commit into two commits. To do that, we need to unstage the changes from this commit. To do that we use the command:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> reset HEAD~</span></code></pre></div>
+<p>This resets the <code>HEAD</code> to what it was when the commit was started. You should see some output of which files were unstaged by this command. Now, we can use the <code>git add ...</code> command to add back the changes - this time differentiating all linting changes from the adding of the credentials.</p>
+<p>Once you’ve created two new commits, you can continue with <code>git rebase --continue</code>. You should now see the successful rebase message and your log now looks like …</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 1e46146a23de69f48d4a9c4e734396f1fe2df0cc (HEAD -&gt; feature-1)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>|     Add feature-1 tests</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 500e768614139ec1acff8316e2f28af5035e3829</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:51:00 2021 -0400</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>|     Add __pycache__ to the .gitignore</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit c1e50d2bb286cfb316eb23ac4206ce5ec5cded58</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:39:03 2021 -0400</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>|     Fix linting errors</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit cba7f4751f94be62b80498b594804687d364a20b</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:38:53 2021 -0400</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>|     Add credentials</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit db02d3b56013b3140ac03de7f91e1019123825a2</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:23:44 2021 -0400</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>|     Add feature-1</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 4a9c9b12531c7786802241d558f700d40538cad7 (master)</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>  Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>  Date:   Fri Aug 6 10:40:52 2021 -0400</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>      First commit</span></code></pre></div>
+<h4 id="finish">4. Finishing up</h4>
+<p>Lastly, we want to make sure we’ve rebased against the <code>master/main</code> branch in case there are any changes we haven’t picked up. The commands to complete this task are:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> fetch origin</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase origin/master</span></code></pre></div>
+<p>Once this is done, you can push your commit! Now because we’ve done all these changes, you’ll have to commit a cardinal Git sin: force pushing. Don’t worry, it’s completely fine, just use the command <code>git push origin BRANCH --force-with-lease</code>. The <code>--force-with-lease</code> option is a small failsafe that will reject overwriting changes if they conflict with another authors work on the same branch, regardless of the force. You’re now ready to merge into <code>master/main</code>!</p>
+<p>If you check <code>git log --graph</code> you should now see the following:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 1e46146a23de69f48d4a9c4e734396f1fe2df0cc (HEAD -&gt; master)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:45:55 2021 -0400</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>|     Add feature-1 tests</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 500e768614139ec1acff8316e2f28af5035e3829</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 10:51:00 2021 -0400</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>|     Add __pycache__ to the .gitignore</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit c1e50d2bb286cfb316eb23ac4206ce5ec5cded58</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:39:03 2021 -0400</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>|     Fix linting errors</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit cba7f4751f94be62b80498b594804687d364a20b</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:38:53 2021 -0400</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>|     Add credentials</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit db02d3b56013b3140ac03de7f91e1019123825a2</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>| Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>| Date:   Fri Aug 6 11:23:44 2021 -0400</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>|     Add feature-1</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>|</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 4a9c9b12531c7786802241d558f700d40538cad7</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>  Author: Joe Cummings &lt;fake.email@gmail.com&gt;</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>  Date:   Fri Aug 6 10:40:52 2021 -0400</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>      First commit</span></code></pre></div>
+<p>What a gorgeous and useful Git commit history!</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this article, you learned a few tips and tricks to clean up your Git commit history to make your life easier.</p>
+</body>
+</html>
