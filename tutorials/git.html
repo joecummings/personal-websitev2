@@ -214,7 +214,7 @@
 <p>&lt; <a href="./tutorials_index.html">All tutorials</a></p>
 <h1 id="how-to-clean-up-a-messy-git-commit-history">How to clean up a messy Git commit history</h1>
 <p>Joe Cummings</p>
-<p>3 August, 2021 (Last Updated: 7 August, 2021)</p>
+<p>3 August, 2021 (Last Updated: 19 August, 2021)</p>
 <hr />
 <ul>
 <li><a href="#motivation">Motivation</a></li>
@@ -230,32 +230,25 @@
 </ul>
 <hr />
 <h3 id="motivation"><strong>Motivation</strong></h3>
-<p>If you’re like me, your Git commit history is not always the most helpful. There are poorly named commits, weird branch merges, commits that don’t belong together, etc.</p>
+<p>Let’s face it - your Git commit history may not always be the most helpful. There are poorly named commits, weird branch merges, commits that don’t belong together, etc. Oftentimes, we ignore these problems in the name of efficiency.</p>
 <div style="width:100%;height:0;padding-bottom:56%;position:relative;">
 <iframe src="https://giphy.com/embed/QMHoU66sBXqqLqYvGO" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed" allowFullScreen>
 </iframe>
 </div>
-<p>
-<i>Me reviewing my commits after a long day of coding (via GIPHY)</i>
-</p>
-<p>Why does this matter? Well, let’s consider the case of a bug found during review. For whatever reason, a feature is not working as expected. If you have a clean, linear, Git history with well-named commits, finding the issue and rewinding/fixing that commit is fairly trivial.</p>
-<p>While I don’t claim to be an expert in Git, the steps I’ll go over in this post are the tricks I use to clean up my Git history.</p>
+<p>But let’s imagine we found a bug - a feature is not working as expected. If you have a clean, linear, Git history with well-named commits, finding the issue and fixing that commit or rewinding to a place before the broken commit is fairly trivial.</p>
+<p>The steps I’ll go over in this post are the tricks I use to clean up my Git history.</p>
 <h3 id="background">Background</h3>
-<p>I will assume some familiarity with Git if you’re on this post; however, just for fun let’s go over a little bit of history.</p>
-<p>Why do we need version control?</p>
+<p>This post assumes some familiarity with Git; however, just for fun let’s go over a bit of history.</p>
+<p>Git is part of a group of tools that accomplish “version control”. Why do we need “version control”?</p>
 <ol type="1">
-<li>Keeping track of changes. Code is complicated and developers edit and re-edit files constantly to get to a desired state. Version control systems track the changes efficiently.</li>
 <li>Enabling collaboration. Codebases can be huge and software is a team sport.</li>
+<li>Keeping track of changes. Code is complicated and developers edit and re-edit files constantly to get to a desired state. Version control systems track the changes efficiently.</li>
 <li>Data backup.</li>
 </ol>
-<p>Version control systems have been around since the <a href="https://www.linkedin.com/learning/learning-software-version-control/the-history-of-version-control">early 1970s</a>. Git emerged in 2005 from Linus Torvalds and the Linux Foundation. They were used another version control system but the relationship with them soured and so they went about creating their own. Git is incredibly fast, simple, fully distributed, and can handle large projects like the Linux kernel.</p>
-<p>Here are some more resources on the subject:</p>
-<ul>
-<li><a href="https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git">A short history of Git</a></li>
-<li><a href="https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control">Version control</a></li>
-</ul>
+<p>Version control systems have been around since the <a href="https://www.linkedin.com/learning/learning-software-version-control/the-history-of-version-control">early 1970s</a>, but Git emerged in 2005 from Linus Torvalds and the Linux Foundation. Up until 2005, they used another version control system but the relationship soured and Linux was forced to create their own. Git is incredibly fast, simple, fully distributed, and can handle large projects (like the Linux kernel).</p>
+<p>Some more resources on the subject can be found in the footnotes <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>,<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
 <h3 id="cleanup">Cleaning up Git commits</h3>
-<p>For this, let’s assume we are working on a feature on a separate branch (because we would NEVER work on <code>master/main</code> branch) and we’ve gotten to the point where we want to submit a <a href="https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">Pull Request</a> and merge our changes into the <code>master/main</code> branch. I find it really useful to start by seeing where we are:</p>
+<p>Let’s assume we are working on a feature on a separate branch (because we would NEVER work on <code>master/main</code> branch) and we’ve gotten to the point where we want to submit a <a href="https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">Pull Request</a> and merge our changes into the <code>master/main</code> branch. I find it really useful to start by seeing where we are:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--graph</span></span></code></pre></div>
 <p>This pulls up all my commits (or as many as will fit in my screen) like the following:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 9b4b5040eef0504182dcdef7aea73334551cd3b9 (HEAD -&gt; feature-1)</span>
@@ -299,12 +292,12 @@
 <span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  Date:   Fri Aug 6 10:40:52 2021 -0400</span>
 <span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>      First commit</span></code></pre></div>
-<p>The <code>--graph</code> option gives a nice condensed and intuitive view of what changes currently exist in the history. We can see that there are 6 commits on my new branch <code>feature-1</code> and <code>master</code> is set to the very first commit. Now there are few things that we might want to clean up in this history before we commit it to the annals of <code>master/main</code> forever.</p>
+<p>The <code>--graph</code> option gives a nice condensed and intuitive view of what changes exist in the history. We can see that there are 6 commits on my new branch <code>feature-1</code> and <code>master</code> is set to the very first commit. Now there are few things that we might want to clean up in this history before we commit it to the annals of <code>master/main</code> forever.</p>
 <h4 id="combining">1. Combining multiple smaller commits into one</h4>
-<p>Let’s take a look at the latest three commits. We can see one is adding tests for our feature, one is a typo correction in that tests file, and one is deleting a test we’ve since deemed unnecessary. These don’t need to be three separate commits - we gain no information from that! So we want to combine these commits, which we can do using the <code>rebase</code> command.</p>
+<p>Let’s take a look at the latest three commits. We can see one is adding tests for our feature, one is a typo correction in that tests file, and one is deleting a test we’ve since deemed unnecessary. These don’t need to be three separate commits - we gain no valuable information from that! So we want to combine these commits, which we can do using the <a href="https://git-scm.com/docs/git-rebase"><code>rebase</code></a> command. It’s called <code>rebase</code> becasue it <strong>RE</strong>applies commits to the <strong>BASE</strong> of another tip/branch.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase <span class="at">-i</span> HEAD~3</span></code></pre></div>
-<p>Let’s decode this command a little. The <code>-i</code> option means this is going to be “interactive”, which means Git will show us a helpful Vim editor to complete the rebase. The <code>HEAD~3</code> means we want to move the <code>HEAD</code> (or current place in the code) back 3 commits, because that’s the first commit we want to use to combine.</p>
-<p>This command should popup a Vim window that looks like the following:</p>
+<p>Let’s decode this command a little. The <code>-i</code> option means this is going to be “interactive”, which means Git will show us a helpful editor to complete the rebase. It will use the default text editor on your computer, so for me it’s <a href="https://www.vim.org/">Vim</a>. The <code>HEAD~3</code> means we want to move the <code>HEAD</code> (or current place in the code) back 3 commits, because that’s the first commit we want to use to combine.</p>
+<p>This command should popup an editor window that looks like the following:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pick c4fb686 Add feature-1 tests</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pick f528649 Fix typo in feature-1 tests</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>pick 9b4b504 Remove redundant test for feature-1</span>
@@ -337,7 +330,7 @@
 <div class="sourceCode" id="cb5"><pre class="sourceCode diff"><code class="sourceCode diff"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;GIT COMMAND&gt; &lt;COMMIT HASH&gt; &lt;COMMIT MESSAGE&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>pick c4fb686 Add feature-1 tests</span></code></pre></div>
-<p>The option we want is <code>s</code> or <code>squash</code>. (You could also use <code>f</code> fir <code>fixup</code>.) The caveat is that all these commits have to be consectutive. So if these commits were all over our history, we’d have to use our editor and a little Vim magic to move all these commits together. Typically, I keep the oldest one where it is and move the more recent commits back.</p>
+<p>The option we want is <code>s</code> or <code>squash</code>. (You could also use <code>f</code> for <code>fixup</code>.) The caveat is that all these commits have to be consectutive. So if these commits were all over our history, we’d have to use our editor and a little Vim magic to move all these commits together. Typically, I keep the oldest one where it is and move the more recent commits back.</p>
 <blockquote>
 <p>Vim tips: <code>Shift + V</code> will let you select an entire line in Vim. Then, you can use <code>d</code> to cut it, move your cursor to where you want it, and <code>p</code> to paste it.</p>
 </blockquote>
@@ -402,7 +395,7 @@
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a># Rebase 4a9c9b1..9e9a25d onto 4a9c9b1 (2 commands)</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
-<p>Upon saving and closing, this will bring up an editor that looks very similar to the one we just saw for rebasing. Instead of commenting out the old commit message or deleting it, just rename it to something more descriptive like “Add __pycache__ to the .gitignore”. Upon saving and quitting, we should again see a succesful message.</p>
+<p>Upon saving and closing, this will bring up an editor that looks very similar to the one we just saw for rebasing. Instead of commenting out the old commit message or deleting it, just rename it to something more descriptive like <code>"Add \__pycache__ to the .gitignore"</code>. Upon saving and quitting, we should again see a succesful message.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Successfully</span> rebased and updated refs/heads/master.</span></code></pre></div>
 <p>And the log now looks like the following. We’re getting there!</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode changelog"><code class="sourceCode changelog"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">*</span> commit 1e46146a23de69f48d4a9c4e734396f1fe2df0cc (HEAD -&gt; feature-1)</span>
@@ -423,7 +416,7 @@
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase <span class="at">-i</span> HEAD~3<span class="kw">`</span></span></code></pre></div>
 <p>When the window pops up, we want to use the <code>e</code> option for <code>edit</code>. This will stop you at the given commit to make edits.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Stopped</span> at ec09d3b...  Fix linting errors<span class="kw">;</span> <span class="ex">add</span> credentials</span></code></pre></div>
-<p>Now there’s a lot you can go here. Essentially you’re back at the commit and can make whatever edits you want to! However, we want to split this commit into two commits. To do that, we need to unstage the changes from this commit. To do that we use the command:</p>
+<p>There’s a lot you can do here. Essentially you’re back at the commit and can make whatever edits you want to! However, we want to split this commit into two commits. To do that, we need to unstage the changes from this commit. To do that we use the command:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> reset HEAD~</span></code></pre></div>
 <p>This resets the <code>HEAD</code> to what it was when the commit was started. You should see some output of which files were unstaged by this command. Now, we can use the <code>git add ...</code> command to add back the changes - this time differentiating all linting changes from the adding of the credentials.</p>
 <p>Once you’ve created two new commits, you can continue with <code>git rebase --continue</code>. You should now see the successful rebase message and your log now looks like …</p>
@@ -506,5 +499,12 @@
 <p>What a gorgeous and useful Git commit history!</p>
 <h3 id="conclusion">Conclusion</h3>
 <p>In this article, you learned a few tips and tricks to clean up your Git commit history to make your life easier.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p><a href="https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git">A short history of Git</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p><a href="https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control">Version control</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 </body>
 </html>

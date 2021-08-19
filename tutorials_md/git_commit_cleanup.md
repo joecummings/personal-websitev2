@@ -4,7 +4,7 @@
 
 Joe Cummings
 
-3 August, 2021 (Last Updated: 7 August, 2021)
+3 August, 2021 (Last Updated: 19 August, 2021)
  
 ***
 
@@ -20,35 +20,35 @@ Joe Cummings
 ***
 
 ### **Motivation** {#motivation}
-If you're like me, your Git commit history is not always the most helpful. There are poorly named commits, weird branch merges, commits that don't belong together, etc. 
+Let's face it - your Git commit history may not always be the most helpful. There are poorly named commits, weird branch merges, commits that don't belong together, etc. Oftentimes, we ignore these problems in the name of efficiency.
 
-<div style="width:100%;height:0;padding-bottom:56%;position:relative;"><iframe src="https://giphy.com/embed/QMHoU66sBXqqLqYvGO" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed" allowFullScreen></iframe></div><p><i>Me reviewing my commits after a long day of coding (via GIPHY)</i></p>
+<div style="width:100%;height:0;padding-bottom:56%;position:relative;"><iframe src="https://giphy.com/embed/QMHoU66sBXqqLqYvGO" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed" allowFullScreen></iframe></div>
 
-Why does this matter? Well, let's consider the case of a bug found during review. For whatever reason, a feature is not working as expected. If you have a clean, linear, Git history with well-named commits, finding the issue and rewinding/fixing that commit is fairly trivial.
+But let's imagine we found a bug - a feature is not working as expected. If you have a clean, linear, Git history with well-named commits, finding the issue and fixing that commit or rewinding to a place before the broken commit is fairly trivial.
 
-While I don't claim to be an expert in Git, the steps I'll go over in this post are the tricks I use to clean up my Git history.
+The steps I'll go over in this post are the tricks I use to clean up my Git history.
 
 ### Background {#background}
 
-I will assume some familiarity with Git if you're on this post; however, just for fun let's go over a little bit of history.
+This post assumes some familiarity with Git; however, just for fun let's go over a bit of history.
 
-Why do we need version control?
+Git is part of a group of tools that accomplish "version control". Why do we need "version control"?
 
-1. Keeping track of changes. Code is complicated and developers edit and re-edit files constantly to get to a desired state. Version control systems track the changes efficiently.
-2. Enabling collaboration. Codebases can be huge and software is a team sport.
+1. Enabling collaboration. Codebases can be huge and software is a team sport.
+2. Keeping track of changes. Code is complicated and developers edit and re-edit files constantly to get to a desired state. Version control systems track the changes efficiently.
 3. Data backup.
 
-Version control systems have been around since the [early 1970s](https://www.linkedin.com/learning/learning-software-version-control/the-history-of-version-control). Git emerged in 2005 from Linus Torvalds and the Linux Foundation. They were used another version control system but the relationship with them soured and so they went about creating their own. Git is incredibly fast, simple, fully distributed, and can handle large projects like the Linux kernel.
+Version control systems have been around since the [early 1970s](https://www.linkedin.com/learning/learning-software-version-control/the-history-of-version-control), but Git emerged in 2005 from Linus Torvalds and the Linux Foundation. Up until 2005, they used another version control system but the relationship soured and Linux was forced to create their own. Git is incredibly fast, simple, fully distributed, and can handle large projects (like the Linux kernel).
 
-Here are some more resources on the subject:
+Some more resources on the subject can be found in the footnotes [^1],[^2].
 
-* [A short history of Git](https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git)
-* [Version control](https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control)
+[^1]: [A short history of Git](https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git)
+[^2]: [Version control](https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control)
 
 
 ### Cleaning up Git commits {#cleanup}
 
-For this, let's assume we are working on a feature on a separate branch (because we would NEVER work on `master/main` branch) and we've gotten to the point where we want to submit a [Pull Request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) and merge our changes into the `master/main` branch. I find it really useful to start by seeing where we are:
+Let's assume we are working on a feature on a separate branch (because we would NEVER work on `master/main` branch) and we've gotten to the point where we want to submit a [Pull Request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) and merge our changes into the `master/main` branch. I find it really useful to start by seeing where we are:
 
 ```bash
 git log --graph
@@ -100,19 +100,19 @@ This pulls up all my commits (or as many as will fit in my screen) like the foll
       First commit
 ```
 
-The `--graph` option gives a nice condensed and intuitive view of what changes currently exist in the history. We can see that there are 6 commits on my new branch `feature-1` and `master` is set to the very first commit. Now there are few things that we might want to clean up in this history before we commit it to the annals of `master/main` forever. 
+The `--graph` option gives a nice condensed and intuitive view of what changes exist in the history. We can see that there are 6 commits on my new branch `feature-1` and `master` is set to the very first commit. Now there are few things that we might want to clean up in this history before we commit it to the annals of `master/main` forever. 
 
 #### 1. Combining multiple smaller commits into one {#combining}
 
-Let's take a look at the latest three commits. We can see one is adding tests for our feature, one is a typo correction in that tests file, and one is deleting a test we've since deemed unnecessary. These don't need to be three separate commits - we gain no information from that! So we want to combine these commits, which we can do using the `rebase` command. 
+Let's take a look at the latest three commits. We can see one is adding tests for our feature, one is a typo correction in that tests file, and one is deleting a test we've since deemed unnecessary. These don't need to be three separate commits - we gain no valuable information from that! So we want to combine these commits, which we can do using the [`rebase`](https://git-scm.com/docs/git-rebase) command. It's called `rebase` becasue it **RE**applies commits to the **BASE** of another tip/branch.
 
 ```bash
 git rebase -i HEAD~3
 ```
 
-Let's decode this command a little. The `-i` option means this is going to be "interactive", which means Git will show us a helpful Vim editor to complete the rebase. The `HEAD~3` means we want to move the `HEAD` (or current place in the code) back 3 commits, because that's the first commit we want to use to combine. 
+Let's decode this command a little. The `-i` option means this is going to be "interactive", which means Git will show us a helpful editor to complete the rebase. It will use the default text editor on your computer, so for me it's [Vim](https://www.vim.org/). The `HEAD~3` means we want to move the `HEAD` (or current place in the code) back 3 commits, because that's the first commit we want to use to combine.
 
-This command should popup a Vim window that looks like the following:
+This command should popup an editor window that looks like the following:
 
 ```diff
 pick c4fb686 Add feature-1 tests
@@ -153,7 +153,7 @@ Git provides this convenient dialog that contains all the things you may want to
 pick c4fb686 Add feature-1 tests
 ```
 
-The option we want is `s` or `squash`. (You could also use `f` fir `fixup`.) The caveat is that all these commits have to be consectutive. So if these commits were all over our history, we'd have to use our editor and a little Vim magic to move all these commits together. Typically, I keep the oldest one where it is and move the more recent commits back. 
+The option we want is `s` or `squash`. (You could also use `f` for `fixup`.) The caveat is that all these commits have to be consectutive. So if these commits were all over our history, we'd have to use our editor and a little Vim magic to move all these commits together. Typically, I keep the oldest one where it is and move the more recent commits back. 
 
 > Vim tips: `Shift + V` will let you select an entire line in Vim. Then, you can use `d` to cut it, move your cursor to where you want it, and `p` to paste it.
 
@@ -243,7 +243,7 @@ pick 9e9a25d Add feature-1 tests
 ...
 ```
 
-Upon saving and closing, this will bring up an editor that looks very similar to the one we just saw for rebasing. Instead of commenting out the old commit message or deleting it, just rename it to something more descriptive like "Add \__pycache__ to the .gitignore". Upon saving and quitting, we should again see a succesful message.
+Upon saving and closing, this will bring up an editor that looks very similar to the one we just saw for rebasing. Instead of commenting out the old commit message or deleting it, just rename it to something more descriptive like `"Add \__pycache__ to the .gitignore"`. Upon saving and quitting, we should again see a succesful message.
 
 ```bash
 Successfully rebased and updated refs/heads/master.
@@ -281,7 +281,7 @@ When the window pops up, we want to use the `e` option for `edit`. This will sto
 Stopped at ec09d3b...  Fix linting errors; add credentials
 ```
 
-Now there's a lot you can go here. Essentially you're back at the commit and can make whatever edits you want to! However, we want to split this commit into two commits. To do that, we need to unstage the changes from this commit. To do that we use the command:
+There's a lot you can do here. Essentially you're back at the commit and can make whatever edits you want to! However, we want to split this commit into two commits. To do that, we need to unstage the changes from this commit. To do that we use the command:
 
 ```bash
 git reset HEAD~
